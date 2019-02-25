@@ -3,7 +3,6 @@ package ml.melun.mangaview.mangaview;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 
 public class Decoder {
     int __seed=0;

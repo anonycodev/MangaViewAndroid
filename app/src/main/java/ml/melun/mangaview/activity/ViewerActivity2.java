@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Animatable;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -27,10 +27,18 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.transition.Transition;
+import com.facebook.common.references.CloseableReference;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.BaseControllerListener;
+import com.facebook.drawee.controller.ControllerListener;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.bitmaps.PlatformBitmapFactory;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.image.ImageInfo;
+import com.facebook.imagepipeline.request.BasePostprocessor;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.facebook.imagepipeline.request.Postprocessor;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -39,10 +47,14 @@ import java.util.List;
 
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
+import ml.melun.mangaview.adapter.StripAdapter;
+import ml.melun.mangaview.customViews.WrapContentDraweeView;
 import ml.melun.mangaview.mangaview.Decoder;
 import ml.melun.mangaview.mangaview.Manga;
 import ml.melun.mangaview.mangaview.Title;
 
+import static ml.melun.mangaview.Utils.convertUri;
+import static ml.melun.mangaview.Utils.cutBitmap;
 import static ml.melun.mangaview.Utils.getSample;
 import static ml.melun.mangaview.Utils.getScreenSize;
 
@@ -60,18 +72,17 @@ public class ViewerActivity2 extends AppCompatActivity {
     TextView toolbarTitle;
     int viewerBookmark = -1;
     List<String> imgs;
-    List<Integer> types;
     ProgressDialog pd;
     List<Manga> eps;
     int index;
     Title title;
-    ImageView frame;
+    SimpleDraweeView frame;
     int type=-1;
-    Bitmap imgCache, preloadImg;
     Intent result;
     AlertDialog.Builder alert;
     Spinner spinner;
-    int width = 0;
+    int screenWidth = 0;
+    ControllerListener listener;
 
     Decoder d;
 
@@ -103,7 +114,7 @@ public class ViewerActivity2 extends AppCompatActivity {
         spinner = this.findViewById(R.id.toolbar_spinner);
         stretch = p.getStretch();
         if(stretch) frame.setScaleType(ImageView.ScaleType.FIT_XY);
-        width = getScreenSize(getWindowManager().getDefaultDisplay());
+        screenWidth = getScreenSize(getWindowManager().getDefaultDisplay());
 
         Intent intent = getIntent();
 
@@ -133,8 +144,6 @@ public class ViewerActivity2 extends AppCompatActivity {
                 p.setBookmark(title.getName(),id);
             }
             imgs = manga.getImgs();
-            types = new ArrayList<>();
-            for(int i=0; i<imgs.size()*2;i++) types.add(-1);
             commentBtn.setVisibility(View.GONE);
             d = new Decoder(manga.getSeed(), manga.getId());
             refreshImage();
@@ -252,6 +261,18 @@ public class ViewerActivity2 extends AppCompatActivity {
             }
         });
 
+        listener = new BaseControllerListener<ImageInfo>() {
+            @Override
+            public void onIntermediateImageSet(String id, @Nullable ImageInfo imageInfo) {
+                updateFrameSize(imageInfo);
+            }
+
+            @Override
+            public void onFinalImageSet(String id, @Nullable ImageInfo imageInfo, @Nullable Animatable animatable) {
+                updateFrameSize(imageInfo);
+            }
+        };
+
     }
 
     void nextPage(){
@@ -262,11 +283,28 @@ public class ViewerActivity2 extends AppCompatActivity {
             //dont add page
             //only change type
             type = 1;
-            int width = imgCache.getWidth();
-            int height = imgCache.getHeight();
+            final String image = imgs.get(viewerBookmark);
+            //placeholder
+            //frame.setImageResource(R.drawable.placeholder);
+            Postprocessor postprocessor = new BasePostprocessor() {
+                @Override
+                public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
+                    int width = sourceBitmap.getWidth();
+                    int height = sourceBitmap.getHeight();
+                    CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
+                    bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                    return CloseableReference.cloneOrNull(bitref);
+                }
+            };
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
+                    .setPostprocessor(postprocessor)
+                    .build();
 
-            if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, width/2, 0, width / 2, height));
-            else frame.setImageBitmap(Bitmap.createBitmap(imgCache, 0, 0, width / 2, height));
+            frame.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(imageRequest)
+                    .setOldController(frame.getController())
+                    .setControllerListener(listener)
+                    .build());
         }else{
             //is single page OR unidentified
             //add page
@@ -274,38 +312,60 @@ public class ViewerActivity2 extends AppCompatActivity {
             viewerBookmark++;
             final String image = imgs.get(viewerBookmark);
             //placeholder
-            frame.setImageResource(R.drawable.placeholder);
-            Glide.with(context)
-                    .asBitmap()
-                    .load(image)
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
-                            //
-                        }
+            //frame.setImageResource(R.drawable.placeholder);
 
-                        @Override
-                        public void onResourceReady(Bitmap bitmap,
-                                                    Transition<? super Bitmap> transition) {
-                            Bitmap sample = getSample(d.decode(bitmap),width);
-                            int width = sample.getWidth();
-                            int height = sample.getHeight();
-                            if(width>height){
-                                imgCache = sample;
-                                type=0;
-                                if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache,0,0,width/2,height));
-                                else frame.setImageBitmap(Bitmap.createBitmap(imgCache,width/2,0,width/2,height));
-                            }else{
-                                type=-1;
-                                frame.setImageBitmap(sample);
-                            }
-                            preload();
-                        }
-                    });
+            Postprocessor postprocessor = new BasePostprocessor() {
+                @Override
+                public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
+                    int width = sourceBitmap.getWidth();
+                    int height = sourceBitmap.getHeight();
+                    if(width>height) type = 0;
+                    else type = -1;
+                    CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
+                    bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                    return CloseableReference.cloneOrNull(bitref);
+                }
+            };
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
+                    .setPostprocessor(postprocessor)
+                    .build();
+
+            frame.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(imageRequest)
+                    .setOldController(frame.getController())
+                    .setControllerListener(listener)
+                    .build());
+
+//            Glide.with(context)
+//                    .asBitmap()
+//                    .load(image)
+//                    .into(new CustomTarget<Bitmap>() {
+//                        @Override
+//                        public void onLoadCleared(@Nullable Drawable placeholder) {
+//                            //
+//                        }
+//
+//                        @Override
+//                        public void onResourceReady(Bitmap bitmap,
+//                                                    Transition<? super Bitmap> transition) {
+//                            Bitmap sample = getSample(d.decode(bitmap),screenWidth);
+//                            int screenWidth = sample.getWidth();
+//                            int height = sample.getHeight();
+//                            if(screenWidth>height){
+//                                imgCache = sample;
+//                                type=0;
+//                                if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache,0,0,screenWidth/2,height));
+//                                else frame.setImageBitmap(Bitmap.createBitmap(imgCache,screenWidth/2,0,screenWidth/2,height));
+//                            }else{
+//                                type=-1;
+//                                frame.setImageBitmap(sample);
+//                            }
+//                            preload();
+//                        }
+//                    });
         }
-        p.setViewerBookmark(id,viewerBookmark);
-        if(imgs.size()-1==viewerBookmark) p.removeViewerBookmark(id);
         updatePageIndex();
+        preload();
     }
     void prevPage(){
         if(viewerBookmark==0 && (type==-1 || type==0)){
@@ -313,10 +373,28 @@ public class ViewerActivity2 extends AppCompatActivity {
         } else if(type==1){
             //is two page, current pos: left
             type = 0;
-            int width = imgCache.getWidth();
-            int height = imgCache.getHeight();
-            if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, 0, 0, width / 2, height));
-            else frame.setImageBitmap(Bitmap.createBitmap(imgCache, width/2, 0, width / 2, height));
+            final String image = imgs.get(viewerBookmark);
+            //placeholder
+            //frame.setImageResource(R.drawable.placeholder);
+            Postprocessor postprocessor = new BasePostprocessor() {
+                @Override
+                public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
+                    int width = sourceBitmap.getWidth();
+                    int height = sourceBitmap.getHeight();
+                    CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
+                    bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                    return CloseableReference.cloneOrNull(bitref);
+                }
+            };
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
+                    .setPostprocessor(postprocessor)
+                    .build();
+
+            frame.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(imageRequest)
+                    .setOldController(frame.getController())
+                    .setControllerListener(listener)
+                    .build());
         }else{
             //is single page OR unidentified
             //decrease page
@@ -324,82 +402,135 @@ public class ViewerActivity2 extends AppCompatActivity {
             viewerBookmark--;
             final String image = imgs.get(viewerBookmark);
             //placeholder
-            frame.setImageResource(R.drawable.placeholder);
-            Glide.with(context)
-                    .asBitmap()
-                    .load(image)
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
-                            Bitmap sample = getSample(d.decode(bitmap), width);
-                            int width = sample.getWidth();
-                            int height = sample.getHeight();
-                            if(width>height){
-                                imgCache = sample;
-                                type=1;
-                                if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, width/2, 0, width / 2, height));
-                                else frame.setImageBitmap(Bitmap.createBitmap(imgCache,0,0,width/2,height));
-                            }else{
-                                type=-1;
-                                frame.setImageBitmap(sample);
-                            }
-                        }
+            //frame.setImageResource(R.drawable.placeholder);
+            Postprocessor postprocessor = new BasePostprocessor() {
+                @Override
+                public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
+                    int width = sourceBitmap.getWidth();
+                    int height = sourceBitmap.getHeight();
+                    if(width>height) type = 1;
+                    else type = -1;
+                    CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
+                    bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                    return CloseableReference.cloneOrNull(bitref);
+                }
+            };
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
+                    .setPostprocessor(postprocessor)
+                    .build();
 
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
+            frame.setController(Fresco.newDraweeControllerBuilder()
+                    .setImageRequest(imageRequest)
+                    .setOldController(frame.getController())
+                    .setControllerListener(listener)
+                    .build());
 
-                        }
-                    });
+//            Glide.with(context)
+//                    .asBitmap()
+//                    .load(image)
+//                    .into(new CustomTarget<Bitmap>() {
+//                        @Override
+//                        public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
+//                            Bitmap sample = getSample(d.decode(bitmap), screenWidth);
+//                            int screenWidth = sample.getWidth();
+//                            int height = sample.getHeight();
+//                            if(screenWidth>height){
+//                                imgCache = sample;
+//                                type=1;
+//                                if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, screenWidth/2, 0, screenWidth / 2, height));
+//                                else frame.setImageBitmap(Bitmap.createBitmap(imgCache,0,0,screenWidth/2,height));
+//                            }else{
+//                                type=-1;
+//                                frame.setImageBitmap(sample);
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onLoadCleared(@Nullable Drawable placeholder) {
+//
+//                        }
+//                    });
         }
-        p.setViewerBookmark(id,viewerBookmark);
-        if(0==viewerBookmark) p.removeViewerBookmark(id);
         updatePageIndex();
-
+        preload();
     }
-
-
 
     void refreshImage(){
         final String image = imgs.get(viewerBookmark);
+        type = -1;
         //placeholder
         //frame.setImageResource(R.drawable.placeholder);
-        Glide.with(context)
-                .asBitmap()
-                .load(image)
-                .into(new CustomTarget<Bitmap>() {
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {
+//        Glide.with(context)
+//                .asBitmap()
+//                .load(image)
+//                .into(new CustomTarget<Bitmap>() {
+//                    @Override
+//                    public void onLoadCleared(@Nullable Drawable placeholder) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
+//                        Bitmap sample = getSample(d.decode(bitmap),screenWidth);
+//                        int screenWidth = sample.getWidth();
+//                        int height = sample.getHeight();
+//                        if(screenWidth>height){
+//                            imgCache = sample;
+//                            type=0;
+//                            if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, 0, 0, screenWidth / 2, height));
+//                            else frame.setImageBitmap(Bitmap.createBitmap(imgCache,screenWidth/2,0,screenWidth/2,height));
+//                        }else{
+//                            type=-1;
+//                            frame.setImageBitmap(sample);
+//                        }
+//                        preload();
+//                    }
+//                });
+        Postprocessor postprocessor = new BasePostprocessor() {
+            @Override
+            public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
+                int width = sourceBitmap.getWidth();
+                int height = sourceBitmap.getHeight();
+                if(width>height) type = 0;
+                else type = -1;
+                CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
+                bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                return CloseableReference.cloneOrNull(bitref);
+            }
+        };
+        ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
+                .setPostprocessor(postprocessor)
+                .build();
 
-                    }
+        frame.setController(Fresco.newDraweeControllerBuilder()
+                .setImageRequest(imageRequest)
+                .setOldController(frame.getController())
+                .setControllerListener(listener)
+                .build());
 
-                    @Override
-                    public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
-                        Bitmap sample = getSample(d.decode(bitmap),width);
-                        int width = sample.getWidth();
-                        int height = sample.getHeight();
-                        if(width>height){
-                            imgCache = sample;
-                            type=0;
-                            if(reverse) frame.setImageBitmap(Bitmap.createBitmap(imgCache, 0, 0, width / 2, height));
-                            else frame.setImageBitmap(Bitmap.createBitmap(imgCache,width/2,0,width/2,height));
-                        }else{
-                            type=-1;
-                            frame.setImageBitmap(sample);
-                        }
-                        preload();
-                    }
-                });
         updatePageIndex();
+        preload();
     }
 
     void preload(){
-        if(viewerBookmark<imgs.size()-1)
-            Glide.with(context)
-                    .asBitmap()
-                    .load(imgs.get(viewerBookmark+1))
-                    .preload();
+//        if(viewerBookmark<imgs.size()-1)
+//            Glide.with(context)
+//                    .asBitmap()
+//                    .load(imgs.get(viewerBookmark+1))
+//                    .preload();
+        if(viewerBookmark<imgs.size()-1) {
+            String img = imgs.get(viewerBookmark+1);
+            ImagePipeline imagePipeline = Fresco.getImagePipeline();
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+                    .build();
+            imagePipeline.prefetchToBitmapCache(imageRequest, context);
+        }
     }
     void updatePageIndex(){
+        if(id>0) {
+            p.setViewerBookmark(id, viewerBookmark);
+            if (0 == viewerBookmark || imgs.size()-1==viewerBookmark) p.removeViewerBookmark(id);
+        }
         pageBtn.setText(viewerBookmark+1+"/"+imgs.size());
         if(viewerBookmark==imgs.size()-1 && !toolbarshow) toggleToolbar();
     }
@@ -504,6 +635,11 @@ public class ViewerActivity2 extends AppCompatActivity {
             if (pd.isShowing()) {
                 pd.dismiss();
             }
+        }
+    }
+    private void updateFrameSize(ImageInfo info){
+        if(info!=null){
+            frame.setAspectRatio(((float)info.getWidth()) / ((float)info.getHeight()));
         }
     }
 }

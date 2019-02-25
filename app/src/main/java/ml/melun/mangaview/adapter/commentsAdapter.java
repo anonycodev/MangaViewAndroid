@@ -9,7 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
+import com.facebook.drawee.view.SimpleDraweeView;
 
 import org.w3c.dom.Text;
 
@@ -17,6 +17,7 @@ import java.util.ArrayList;
 
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
+import ml.melun.mangaview.customViews.UriDraweeView;
 import ml.melun.mangaview.mangaview.Comment;
 
 public class commentsAdapter extends BaseAdapter {
@@ -46,14 +47,14 @@ public class commentsAdapter extends BaseAdapter {
         }
         Comment c = data.get(position);
         ConstraintLayout layout = convertView.findViewById(R.id.comment_layout);
-        ImageView icon = convertView.findViewById(R.id.comment_icon);
+        UriDraweeView icon = convertView.findViewById(R.id.comment_icon);
         TextView content = convertView.findViewById(R.id.comment_content);
         TextView timeStamp = convertView.findViewById(R.id.comment_time);
         TextView user = convertView.findViewById(R.id.comment_user);
         TextView likes = convertView.findViewById(R.id.comment_likes);
 
         layout.setPadding(60*c.getIndent(),0,0,0);
-        if(c.getIcon().length()>1 && !save) Glide.with(context).load(c.getIcon()).into(icon);
+        if(c.getIcon().length()>1 && !save) icon.setImageURI(c.getIcon());
         else icon.setImageResource(R.drawable.user);
         content.setText(c.getContent());
         timeStamp.setText(c.getTimestamp());

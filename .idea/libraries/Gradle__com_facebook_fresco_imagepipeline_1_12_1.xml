@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.facebook.fresco:imagepipeline-1.12.1">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/imagepipeline-1.12.1.aar/414c45be6a3e09a78bbe5f47bdaf5760/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/imagepipeline-1.12.1.aar/414c45be6a3e09a78bbe5f47bdaf5760/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.facebook.fresco/imagepipeline/1.12.1/cb0118bf9db85bdac830581847e5dcec48150a0e/imagepipeline-1.12.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

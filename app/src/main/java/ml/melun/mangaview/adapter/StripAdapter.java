@@ -1,40 +1,38 @@
 package ml.melun.mangaview.adapter;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Point;
-import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
+import android.graphics.drawable.Animatable;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.graphics.Bitmap;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.Request;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.CustomViewTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.SizeReadyCallback;
-import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.request.transition.Transition;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.BaseControllerListener;
+import com.facebook.drawee.controller.ControllerListener;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.image.ImageInfo;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.facebook.imagepipeline.request.Postprocessor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
-import ml.melun.mangaview.mangaview.DecodeTransform;
+import ml.melun.mangaview.customViews.UriDraweeView;
 import ml.melun.mangaview.mangaview.Decoder;
+import ml.melun.mangaview.mangaview.MSMPostProcessor;
 
-import static ml.melun.mangaview.Utils.getSample;
+import static ml.melun.mangaview.Utils.convertUri;
+
+//todo: autocut 부드럽게 (ex: insert image whenever image is splitted)
+//todo: viewer2에서 이미지 로드시 애니메이션 없애기
+
 
 public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> {
 
@@ -76,69 +74,69 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int pos) {
-        holder.frame.setImageResource(R.drawable.placeholder);
-        holder.refresh.setVisibility(View.VISIBLE);
-        if(autoCut) {
-            final int position = pos / 2;
-            final int type = pos % 2;
-            String image = imgs.get(position);
-            //set image to holder view
-            Glide.with(mainContext)
-                    .asBitmap()
-                    .load(image)
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
-                            Bitmap decoded = getSample(d.decode(bitmap),width);
-                            int width = decoded.getWidth();
-                            int height = decoded.getHeight();
-                            if(width>height){
-                                if(type==0) {
-                                    if (reverse)
-                                        holder.frame.setImageBitmap(Bitmap.createBitmap(decoded, 0, 0, width / 2, height));
-                                    else
-                                        holder.frame.setImageBitmap(Bitmap.createBitmap(decoded, width / 2, 0, width / 2, height));
-                                }else{
-                                    if (reverse)
-                                        holder.frame.setImageBitmap(Bitmap.createBitmap(decoded, width / 2, 0, width / 2, height));
-                                    else
-                                        holder.frame.setImageBitmap(Bitmap.createBitmap(decoded, 0, 0, width / 2, height));
-                                }
-                            }else{
-                                if(type==0) {
-                                    holder.frame.setImageBitmap(decoded);
-                                }else{
-                                    holder.frame.setImageBitmap(Bitmap.createBitmap(bitmap.getWidth(), 1, Bitmap.Config.ARGB_8888));
-                                }
-                            }
-                            holder.refresh.setVisibility(View.GONE);
-                        }
-
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
-                            holder.frame.setImageDrawable(placeholder);
-                            holder.refresh.setVisibility(View.VISIBLE);
-                        }
-                    });
+        int type = -1;
+        int position = pos;
+        if(autoCut){
+            //type : 0/1
+            type = pos%2;
+            position = pos/2;
         }
-        else Glide.with(mainContext)
-                .asBitmap()
-                .load(imgs.get(pos))
-                .apply(new RequestOptions().dontTransform().placeholder(R.drawable.placeholder))
-                .into(new CustomTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                        Bitmap decoded = getSample(d.decode(resource),width);
-                        holder.frame.setImageBitmap(decoded);
-                        holder.refresh.setVisibility(View.GONE);
-                    }
+        Postprocessor postprocessor = new MSMPostProcessor(d,type,width);
+        ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(imgs.get(position)))
+                .setPostprocessor(postprocessor)
+                .build();
+        ControllerListener listener = new BaseControllerListener<ImageInfo>() {
+            @Override
+            public void onIntermediateImageSet(String id, @Nullable ImageInfo imageInfo) {
+                holder.refresh.setVisibility(View.GONE);
+                if(imageInfo.getHeight()<2){
+                    holder.frame.setVisibility(View.GONE);
+                }else{
+                    holder.frame.setVisibility(View.VISIBLE);
+                    //change imageview layoutparams
+                    updateFrameSize(imageInfo, holder);
+                }
+            }
 
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {
-                        holder.frame.setImageDrawable(placeholder);
-                        holder.refresh.setVisibility(View.VISIBLE);
-                    }
-                });
+            @Override
+            public void onSubmit(String id, Object callerContext) {
+                super.onSubmit(id, callerContext);
+                holder.refresh.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onIntermediateImageFailed(String id, Throwable throwable) {
+                super.onIntermediateImageFailed(id, throwable);
+                holder.refresh.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                super.onFailure(id, throwable);
+                holder.refresh.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onFinalImageSet(String id, @Nullable ImageInfo imageInfo, @Nullable Animatable animatable) {
+                if(imageInfo.getHeight()<2){
+                    holder.frame.setVisibility(View.GONE);
+                    holder.refresh.setVisibility(View.GONE);
+                }else{
+                    holder.frame.setVisibility(View.VISIBLE);
+                    holder.refresh.setVisibility(View.GONE);
+                    //change imageview layoutparams
+                    updateFrameSize(imageInfo, holder);
+                }
+            }
+        };
+
+        holder.frame.setController(Fresco.newDraweeControllerBuilder()
+                .setImageRequest(imageRequest)
+                .setOldController(holder.frame.getController())
+                .setControllerListener(listener)
+                .build());
+
+        preload(position);
     }
 
 
@@ -151,7 +149,7 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        ImageView frame;
+        SimpleDraweeView frame;
         ImageButton refresh;
         ViewHolder(View itemView) {
             super(itemView);
@@ -180,6 +178,29 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick();
+    }
+
+    private void updateFrameSize(ImageInfo info, ViewHolder holder){
+        if(info!=null){
+            holder.frame.setAspectRatio(((float)info.getWidth()) / ((float)info.getHeight()));
+        }
+    }
+
+    void preload(int pos){
+        ImagePipeline imagePipeline = Fresco.getImagePipeline();
+        if(pos<imgs.size()-1) {
+            String img = imgs.get(pos+1);
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+                    .build();
+            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
+        }
+        if(pos>0){
+            String img = imgs.get(pos-1);
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+                    .build();
+            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
+
+        }
     }
 }
 

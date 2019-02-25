@@ -12,7 +12,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -20,8 +19,11 @@ import java.util.List;
 
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
+import ml.melun.mangaview.customViews.WrapContentDraweeView;
 import ml.melun.mangaview.mangaview.Manga;
 import ml.melun.mangaview.mangaview.Title;
+
+import static ml.melun.mangaview.Utils.convertPath;
 
 public class UpdatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     Context context;
@@ -62,7 +64,7 @@ public class UpdatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         Manga m = mData.get(position);
         h.text.setText(m.getName());
         h.date.setText(m.getDate());
-        if(m.getThumb().length()>1 && !save) Glide.with(context).load(m.getThumb()).into(h.thumb);
+        if(m.getThumb().length()>1 && !save) h.thumb.setImageURI(convertPath(m.getThumb()));
         else h.thumb.setImageBitmap(null);
     }
 
@@ -73,7 +75,7 @@ public class UpdatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     class viewHolder extends RecyclerView.ViewHolder{
         TextView text, date;
-        ImageView thumb;
+        WrapContentDraweeView thumb;
         CardView card;
         Button viewEps;
         public viewHolder(View itemView) {

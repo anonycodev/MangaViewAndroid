@@ -17,14 +17,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
+import ml.melun.mangaview.customViews.WrapContentDraweeView;
 import ml.melun.mangaview.mangaview.Manga;
 import ml.melun.mangaview.mangaview.Title;
 
@@ -98,10 +96,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             else h.h_release.setText("");
             if(favorite) h.h_star.setImageResource(R.drawable.star_on);
             else h.h_star.setImageResource(R.drawable.star_off);
-            if(!save) Glide.with(mainContext)
-                    .load(thumb)
-                    .apply(new RequestOptions().dontTransform())
-                    .into(h.h_thumb);
+            if(!save) ((HeaderHolder) holder).h_thumb.setImageURI(thumb);
             if(online){
                 ((HeaderHolder) holder).h_download.setVisibility(View.VISIBLE);
             }else{
@@ -155,7 +150,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
     public class HeaderHolder extends RecyclerView.ViewHolder{
         TextView h_title, h_author, h_release;
-        ImageView h_thumb;
+        WrapContentDraweeView h_thumb;
         ImageView h_star;
         Button h_download;
         RecyclerView h_tags;

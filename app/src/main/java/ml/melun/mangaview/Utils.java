@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -54,7 +56,16 @@ public class Utils {
                 return false;
             }
             return true;
-        }else return false;
+        }else{
+            File tmp = new File(targetDir.getParent(), "mangaViewTestFile");
+            try {
+                if (tmp.createNewFile()) tmp.delete();
+                else return false;
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
     }
 
     public static String httpsGet(String urlin){
@@ -167,22 +178,38 @@ public class Utils {
         }
     }
 
-    private static int calculateInSampleSize(int width, int reqWidth) {
-        int inSampleSize = 1;
-        if (width > reqWidth) {
-            // Calculate ratios of height and width to requested height and width
-            final int widthRatio = Math.round((float) width / (float) reqWidth);
-            // Choose the smallest ratio as inSampleSize value, this will guarantee
-            // a final image with both dimensions larger than or equal to the
-            // requested height and width.
-            inSampleSize = widthRatio;
-        }
-        return inSampleSize;
-    }
-
     public static int getScreenSize(Display display){
         Point size = new Point();
         display.getSize(size);
         return (size.x>=size.y)? size.x : size.y;
+    }
+
+    public static Bitmap cutBitmap(Bitmap input,int type){
+        int width = input.getWidth();
+        int height = input.getHeight();
+        switch (type) {
+            case -1:
+                return input;
+            case 0:
+                if (width > height)
+                    return Bitmap.createBitmap(input, width / 2, 0, width / 2, height);
+                else return input;
+            case 1:
+                if (width > height) return Bitmap.createBitmap(input, 0, 0, width / 2, height);
+                else return Bitmap.createBitmap(width, 1, Bitmap.Config.ARGB_8888);
+        }
+        return input;
+    }
+
+    public static String convertPath(String input){
+        File file = new File(input);
+        if(file.exists()) return Uri.fromFile(file).getPath();
+        else return input;
+    }
+
+    public static Uri convertUri(String input){
+        File file = new File(input);
+        if(file.exists()) return Uri.fromFile(file);
+        else return Uri.parse(input);
     }
 }

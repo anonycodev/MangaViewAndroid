@@ -1,5 +1,6 @@
 package ml.melun.mangaview.adapter;
 import android.content.Context;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -10,13 +11,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import ml.melun.mangaview.Preference;
 import ml.melun.mangaview.R;
+import ml.melun.mangaview.customViews.WrapContentDraweeView;
 import ml.melun.mangaview.mangaview.Title;
 
 public class TitleAdapter extends RecyclerView.Adapter<TitleAdapter.ViewHolder> {
@@ -85,7 +87,9 @@ public class TitleAdapter extends RecyclerView.Adapter<TitleAdapter.ViewHolder> 
         holder.name.setText(title);
         holder.author.setText(author);
         holder.tags.setText(tags);
-        if(thumb.length()>1 && !save)Glide.with(mainContext).load(thumb).into(holder.thumb);
+        if(thumb.length()>1 && !save){
+            holder.thumb.setImageURI(thumb);
+        }
         else holder.thumb.setImageBitmap(null);
         if(bookmark>0 && resume) holder.resume.setVisibility(View.VISIBLE);
         else holder.resume.setVisibility(View.GONE);
@@ -99,7 +103,7 @@ public class TitleAdapter extends RecyclerView.Adapter<TitleAdapter.ViewHolder> 
 
     class ViewHolder extends RecyclerView.ViewHolder{
         TextView name;
-        ImageView thumb;
+        WrapContentDraweeView thumb;
         TextView author;
         TextView tags;
         Button resume;
@@ -138,8 +142,6 @@ public class TitleAdapter extends RecyclerView.Adapter<TitleAdapter.ViewHolder> 
                     mClickListener.onResumeClick(getAdapterPosition(), p.getBookmark(mData.get(getAdapterPosition()).getName()));
                 }
             });
-
-
         }
     }
 

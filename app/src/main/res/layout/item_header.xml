@@ -15,7 +15,7 @@
         android:layout_height="200sp"
         android:background="#333333">
 
-        <ImageView
+        <ml.melun.mangaview.customViews.WrapContentDraweeView
             android:id="@+id/HeaderThumb"
             android:layout_width="170dp"
             android:layout_height="match_parent"
