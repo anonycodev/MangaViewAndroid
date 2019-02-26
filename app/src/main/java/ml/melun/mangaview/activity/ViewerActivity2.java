@@ -28,12 +28,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.facebook.common.references.CloseableReference;
+import com.facebook.datasource.DataSource;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.controller.BaseControllerListener;
 import com.facebook.drawee.controller.ControllerListener;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.bitmaps.PlatformBitmapFactory;
 import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.image.ImageInfo;
 import com.facebook.imagepipeline.request.BasePostprocessor;
 import com.facebook.imagepipeline.request.ImageRequest;
@@ -292,10 +294,11 @@ public class ViewerActivity2 extends AppCompatActivity {
                     int width = sourceBitmap.getWidth();
                     int height = sourceBitmap.getHeight();
                     CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(d.decode(sourceBitmap), screenWidth),type));
-                    bitmapFactory.createBitmap(getSample(d.decode(sourceBitmap), screenWidth));
+                    bitmapFactory.createBitmap(d.decode(sourceBitmap));
                     return CloseableReference.cloneOrNull(bitref);
                 }
             };
+
             ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(image))
                     .setPostprocessor(postprocessor)
                     .build();
@@ -330,11 +333,32 @@ public class ViewerActivity2 extends AppCompatActivity {
                     .setPostprocessor(postprocessor)
                     .build();
 
+            DataSource<CloseableReference<CloseableImage>> dataSource =
+                    Fresco.getImagePipeline().fetchImageFromBitmapCache(imageRequest, context);
+            try {
+                CloseableReference<CloseableImage> imageReference = dataSource.getResult();
+                if (imageReference != null) {
+                    try {
+                        // Do something with the image, but do not keep the reference to it!
+                        // The image may get recycled as soon as the reference gets closed below.
+                        // If you need to keep a reference to the image, read the following sections.
+                    } finally {
+                        CloseableReference.closeSafely(imageReference);
+                    }
+                } else {
+                    // cache miss
+
+                }
+            } finally {
+                dataSource.close();
+            }
+
             frame.setController(Fresco.newDraweeControllerBuilder()
                     .setImageRequest(imageRequest)
                     .setOldController(frame.getController())
                     .setControllerListener(listener)
                     .build());
+
 
 //            Glide.with(context)
 //                    .asBitmap()
@@ -523,7 +547,9 @@ public class ViewerActivity2 extends AppCompatActivity {
             ImagePipeline imagePipeline = Fresco.getImagePipeline();
             ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
                     .build();
-            imagePipeline.prefetchToBitmapCache(imageRequest, context);
+            DataSource<CloseableReference<CloseableImage>>
+                    dataSource = imagePipeline.fetchDecodedImage(imageRequest, context);
+
         }
     }
     void updatePageIndex(){
