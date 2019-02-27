@@ -19,7 +19,6 @@ public class Decoder {
         }else if(__seed>20000){
             cx = 1;
         } else if (__seed>10000) {
-            __seed /= 10;
             cy = 1;
         }
     }
