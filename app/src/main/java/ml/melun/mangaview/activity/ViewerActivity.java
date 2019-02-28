@@ -186,7 +186,7 @@ public class ViewerActivity extends AppCompatActivity {
                             p.setViewerBookmark(id, firstVisible);
                             viewerBookmark = firstVisible;
                         }
-                        if (lastVisible == stripAdapter.getItemCount() - 1) {
+                        if (lastVisible == stripAdapter.getItemCount() - 1){
                             p.removeViewerBookmark(id);
                         }
                         if(viewerType==2) {

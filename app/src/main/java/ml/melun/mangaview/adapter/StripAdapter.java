@@ -89,13 +89,8 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
             @Override
             public void onIntermediateImageSet(String id, @Nullable ImageInfo imageInfo) {
                 holder.refresh.setVisibility(View.GONE);
-                if(imageInfo.getHeight()<2){
-                    holder.frame.setVisibility(View.GONE);
-                }else{
-                    holder.frame.setVisibility(View.VISIBLE);
-                    //change imageview layoutparams
-                    updateFrameSize(imageInfo, holder);
-                }
+         updateFrameSize(imageInfo, holder);
+
             }
 
             @Override
@@ -118,15 +113,9 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
 
             @Override
             public void onFinalImageSet(String id, @Nullable ImageInfo imageInfo, @Nullable Animatable animatable) {
-                if(imageInfo.getHeight()<2){
-                    holder.frame.setVisibility(View.GONE);
-                    holder.refresh.setVisibility(View.GONE);
-                }else{
-                    holder.frame.setVisibility(View.VISIBLE);
                     holder.refresh.setVisibility(View.GONE);
                     //change imageview layoutparams
                     updateFrameSize(imageInfo, holder);
-                }
             }
         };
 

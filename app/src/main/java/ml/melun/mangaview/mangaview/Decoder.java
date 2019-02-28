@@ -9,6 +9,11 @@ public class Decoder {
     int id=0;
     int view_cnt;
     int cx=5, cy=5;
+
+    public int getCnt(){
+        return view_cnt;
+    }
+
     public Decoder(int seed, int id){
         view_cnt = seed;
         __seed = seed/10;

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.support.annotation.Nullable;
 
 import com.facebook.cache.common.CacheKey;
+import com.facebook.cache.common.SimpleCacheKey;
 import com.facebook.common.references.CloseableReference;
 import com.facebook.imagepipeline.bitmaps.PlatformBitmapFactory;
 import com.facebook.imagepipeline.request.BaseRepeatedPostProcessor;
@@ -36,13 +37,12 @@ public class MSMPostProcessor extends BaseRepeatedPostProcessor {
     @Nullable
     @Override
     public CacheKey getPostprocessorCacheKey() {
-        return super.getPostprocessorCacheKey();
+        return new SimpleCacheKey(decoder.getCnt()+"-"+type);
     }
 
     @Override
     public CloseableReference<Bitmap> process(Bitmap sourceBitmap, PlatformBitmapFactory bitmapFactory) {
         CloseableReference<Bitmap> bitref =  bitmapFactory.createBitmap(cutBitmap(getSample(decoder.decode(sourceBitmap),maxSize),type));
-        bitmapFactory.createBitmap(getSample(decoder.decode(sourceBitmap),maxSize));
         return CloseableReference.cloneOrNull(bitref);
     }
 }
