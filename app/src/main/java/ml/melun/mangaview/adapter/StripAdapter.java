@@ -187,20 +187,20 @@ public class StripAdapter extends RecyclerView.Adapter<StripAdapter.ViewHolder> 
     }
 
     void preload(int pos){
-        ImagePipeline imagePipeline = Fresco.getImagePipeline();
-        if(pos<imgs.size()-1) {
-            String img = imgs.get(pos+1);
-            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
-                    .build();
-            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
-        }
-        if(pos>0){
-            String img = imgs.get(pos-1);
-            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
-                    .build();
-            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
-
-        }
+//        ImagePipeline imagePipeline = Fresco.getImagePipeline();
+//        if(pos<imgs.size()-1) {
+//            String img = imgs.get(pos+1);
+//            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+//                    .build();
+//            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
+//        }
+//        if(pos>0){
+//            String img = imgs.get(pos-1);
+//            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+//                    .build();
+//            imagePipeline.prefetchToDiskCache(imageRequest, mainContext);
+//
+//        }
     }
 }
 

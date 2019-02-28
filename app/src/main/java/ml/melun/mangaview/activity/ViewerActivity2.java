@@ -333,31 +333,39 @@ public class ViewerActivity2 extends AppCompatActivity {
                     .setPostprocessor(postprocessor)
                     .build();
 
-            DataSource<CloseableReference<CloseableImage>> dataSource =
-                    Fresco.getImagePipeline().fetchImageFromBitmapCache(imageRequest, context);
-            try {
-                CloseableReference<CloseableImage> imageReference = dataSource.getResult();
-                if (imageReference != null) {
-                    try {
-                        // Do something with the image, but do not keep the reference to it!
-                        // The image may get recycled as soon as the reference gets closed below.
-                        // If you need to keep a reference to the image, read the following sections.
-                    } finally {
-                        CloseableReference.closeSafely(imageReference);
-                    }
-                } else {
-                    // cache miss
-
-                }
-            } finally {
-                dataSource.close();
-            }
-
             frame.setController(Fresco.newDraweeControllerBuilder()
                     .setImageRequest(imageRequest)
                     .setOldController(frame.getController())
                     .setControllerListener(listener)
                     .build());
+
+
+            //preload test
+//            DataSource<CloseableReference<CloseableImage>> dataSource =
+//                    Fresco.getImagePipeline().fetchImageFromBitmapCache(imageRequest, context);
+//            try {
+//                CloseableReference<CloseableImage> imageReference = dataSource.getResult();
+//                if (imageReference != null) {
+//                    try {
+//                        // Do something with the image, but do not keep the reference to it!
+//                        // The image may get recycled as soon as the reference gets closed below.
+//                        // If you need to keep a reference to the image, read the following sections.
+//                    } finally {
+//                        CloseableReference.closeSafely(imageReference);
+//                    }
+//                } else {
+//                    // cache miss
+//
+//                }
+//            } finally {
+//                dataSource.close();
+//            }
+//
+//            frame.setController(Fresco.newDraweeControllerBuilder()
+//                    .setImageRequest(imageRequest)
+//                    .setOldController(frame.getController())
+//                    .setControllerListener(listener)
+//                    .build());
 
 
 //            Glide.with(context)
@@ -542,15 +550,15 @@ public class ViewerActivity2 extends AppCompatActivity {
 //                    .asBitmap()
 //                    .load(imgs.get(viewerBookmark+1))
 //                    .preload();
-        if(viewerBookmark<imgs.size()-1) {
-            String img = imgs.get(viewerBookmark+1);
-            ImagePipeline imagePipeline = Fresco.getImagePipeline();
-            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
-                    .build();
-            DataSource<CloseableReference<CloseableImage>>
-                    dataSource = imagePipeline.fetchDecodedImage(imageRequest, context);
-
-        }
+//        if(viewerBookmark<imgs.size()-1) {
+//            String img = imgs.get(viewerBookmark+1);
+//            ImagePipeline imagePipeline = Fresco.getImagePipeline();
+//            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(convertUri(img))
+//                    .build();
+//            DataSource<CloseableReference<CloseableImage>>
+//                    dataSource = imagePipeline.fetchDecodedImage(imageRequest, context);
+//
+//        }
     }
     void updatePageIndex(){
         if(id>0) {
