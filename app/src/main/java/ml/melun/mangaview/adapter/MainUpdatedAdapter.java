@@ -22,6 +22,7 @@ import ml.melun.mangaview.R;
 import ml.melun.mangaview.mangaview.Manga;
 
 import static ml.melun.mangaview.MainApplication.p;
+import static ml.melun.mangaview.NeumorphicBackground.setNeumorphicBackground;
 
 public class MainUpdatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     List<Manga> mData;
@@ -94,6 +95,7 @@ public class MainUpdatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             title.setSingleLine(true);
             title.setSelected(true);
             card = itemView.findViewById(R.id.updatedCard);
+            setNeumorphicBackground(card);
             card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -18,4 +18,7 @@
     <color name="nav_disable">#565656</color>
     <color name="colorDarkWindowBackground">#222222</color>
     <color name="colorDarkItem">#333333</color>
+
+
+    <color name="neu_background">#EFEEEE</color>
 </resources>

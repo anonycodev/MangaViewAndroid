@@ -18,6 +18,7 @@ import java.util.List;
 import ml.melun.mangaview.R;
 
 import static ml.melun.mangaview.MainApplication.p;
+import static ml.melun.mangaview.NeumorphicBackground.setNeumorphicBackground;
 
 public class MainTagAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
@@ -144,6 +145,8 @@ public class MainTagAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     tag = itemView.findViewById(R.id.main_name_text);
                     break;
             }
+
+            setNeumorphicBackground(card);
 
 
             card.setOnClickListener(new View.OnClickListener() {

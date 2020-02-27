@@ -26,6 +26,7 @@ import ml.melun.mangaview.mangaview.MainPage;
 import ml.melun.mangaview.mangaview.Manga;
 
 import static ml.melun.mangaview.MainApplication.httpClient;
+import static ml.melun.mangaview.NeumorphicBackground.setNeumorphicBackground;
 import static ml.melun.mangaview.Utils.showCaptchaPopup;
 
 public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -255,7 +256,9 @@ public class MainAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if(dark) {
                     card.setBackgroundColor(ContextCompat.getColor(mainContext, R.color.colorDarkBackground));
                 }
+                setNeumorphicBackground(card);
             }
+
         }
 
         public void setManga(Manga m, int r){
