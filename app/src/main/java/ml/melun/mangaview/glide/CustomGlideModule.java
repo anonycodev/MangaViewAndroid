@@ -12,6 +12,7 @@ import com.bumptech.glide.module.AppGlideModule;
 import static ml.melun.mangaview.MainApplication.httpClient;
 
 import java.io.InputStream;
+@GlideModule
 
 public class CustomGlideModule extends AppGlideModule {
     @Override

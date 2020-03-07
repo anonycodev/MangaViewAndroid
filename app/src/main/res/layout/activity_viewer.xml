@@ -7,26 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context=".activity.ViewerActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/viewerAppbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay"
-        android:alpha="0.8">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/viewerToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/toolbar_height"
-            android:background="?attr/colorPrimary"
-            app:contentInsetStart="0dp"
-            app:contentInsetLeft="0dp"
-            app:popupTheme="@style/AppTheme.PopupOverlay">
-            <include layout="@layout/viewer_toolbar"/>
-
-        </androidx.appcompat.widget.Toolbar>
-
-    </com.google.android.material.appbar.AppBarLayout>
 
     <com.omadahealth.github.swipyrefreshlayout.library.SwipyRefreshLayout
         android:layout_width="match_parent"
@@ -62,6 +43,27 @@
 
 
     </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/viewerAppbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:alpha="0.8">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/viewerToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/toolbar_height"
+            android:background="?attr/colorPrimary"
+            app:contentInsetStart="0dp"
+            app:contentInsetLeft="0dp"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+            <include layout="@layout/viewer_toolbar"/>
+
+        </androidx.appcompat.widget.Toolbar>
+
     </com.google.android.material.appbar.AppBarLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

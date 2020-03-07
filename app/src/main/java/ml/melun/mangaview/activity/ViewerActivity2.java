@@ -1,5 +1,6 @@
 package ml.melun.mangaview.activity;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -102,6 +103,9 @@ public class ViewerActivity2 extends AppCompatActivity {
         else setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_viewer2);
+
+
+
 
         next = this.findViewById(R.id.toolbar_next);
         prev = this.findViewById(R.id.toolbar_previous);
@@ -333,6 +337,8 @@ public class ViewerActivity2 extends AppCompatActivity {
         if(viewerBookmark==imgs.size()-1 && (type==-1 || type==1)){
             //end of manga
             //refreshbtn.setVisibility(View.INVISIBLE);
+            //load next episode
+            next.performClick();
         }else if(type==0){
             //is two page, current pos: right
             //dont add page
@@ -618,17 +624,17 @@ public class ViewerActivity2 extends AppCompatActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event)
-    {
-        if(volumeControl && (keyCode==KeyEvent.KEYCODE_VOLUME_DOWN ||keyCode==KeyEvent.KEYCODE_VOLUME_UP)) {
-            if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ) {
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if(event.getAction() == 1) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_PAGE_DOWN) {
                 nextPage();
-            } else if(keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                return true;
+            } else if (event.getKeyCode() == KeyEvent.KEYCODE_PAGE_UP) {
                 prevPage();
+                return true;
             }
-            return true;
         }
-        return super.onKeyDown(keyCode,event);
+        return super.dispatchKeyEvent(event);
     }
 
     private class loadImages extends AsyncTask<Void,String,Integer> {
