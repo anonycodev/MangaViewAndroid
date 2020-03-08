@@ -241,7 +241,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().getItem(startTab).setChecked(true);
 
         //check for update, notices
-        new CheckInfo(context,httpClient).all(false);
+        // 자동 업데이트 확인 비활성화, 공지만 확인
+        //new CheckInfo(context,httpClient).all(false);
+        new CheckInfo(context,httpClient).notice(false);
     }
 
     public int getTabId(int i){

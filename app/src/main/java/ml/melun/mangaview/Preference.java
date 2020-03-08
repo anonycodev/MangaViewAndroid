@@ -61,7 +61,7 @@ public class Preference {
             pagebookmark = new JSONObject(sharedPref.getString("bookmark", "{}"));
             bookmark = new JSONObject(sharedPref.getString("bookmark2", "{}"));
             darkTheme = sharedPref.getBoolean("darkTheme", false);
-            viewerType = sharedPref.getInt("viewerType",0);
+            viewerType = sharedPref.getInt("viewerType",1);
             reverse = sharedPref.getBoolean("pageReverse",false);
             dataSave = sharedPref.getBoolean("dataSave", false);
             startTab = sharedPref.getInt("startTab", 0);

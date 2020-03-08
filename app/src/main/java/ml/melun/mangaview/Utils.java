@@ -19,7 +19,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,26 +28,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import ml.melun.mangaview.activity.CaptchaActivity;
 import ml.melun.mangaview.activity.EpisodeActivity;
-import ml.melun.mangaview.activity.MainActivity;
-import ml.melun.mangaview.activity.ViewerActivity;
 import ml.melun.mangaview.activity.ViewerActivity2;
-import ml.melun.mangaview.activity.ViewerActivity3;
 import ml.melun.mangaview.mangaview.CustomHttpClient;
 import ml.melun.mangaview.mangaview.Login;
-import ml.melun.mangaview.mangaview.MTitle;
 import ml.melun.mangaview.mangaview.Manga;
 import ml.melun.mangaview.mangaview.Title;
 import okhttp3.FormBody;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class Utils {
 
@@ -145,18 +137,8 @@ public class Utils {
     }
 
     public static Intent viewerIntent(Context context, Manga manga){
-        Intent viewer = null;
-        switch (new Preference(context).getViewerType()){
-            case 0:
-                viewer = new Intent(context, ViewerActivity.class);
-                break;
-            case 2:
-                viewer = new Intent(context, ViewerActivity3.class);
-                break;
-            case 1:
-                viewer = new Intent(context, ViewerActivity2.class);
-                break;
-        }
+        Intent viewer = new Intent(context, ViewerActivity2.class);
+
         viewer.putExtra("manga",new Gson().toJson(manga));
         return viewer;
     }

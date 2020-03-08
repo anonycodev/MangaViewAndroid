@@ -88,12 +88,21 @@ public class ViewerActivity2 extends AppCompatActivity {
     CustomSpinnerAdapter spinnerAdapter;
     Decoder d;
     Boolean error = false, useSecond = false;
+    boolean uilocked = false;
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString("manga", new Gson().toJson(manga));
         outState.putString("title", new Gson().toJson(title));
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(uilocked)
+            super.onBackPressed();
+        else
+            toggleToolbar();
     }
 
     @Override
@@ -121,6 +130,13 @@ public class ViewerActivity2 extends AppCompatActivity {
         pageBtn.setText("-/-");
         leftRight = p.getLeftRight();
         spinner = this.findViewById(R.id.toolbar_spinner);
+
+        this.findViewById(R.id.backButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
 
         spinnerAdapter = new CustomSpinnerAdapter(context);
         spinnerAdapter.setListener(new CustomSpinnerAdapter.CustomSpinnerListener() {
@@ -240,6 +256,8 @@ public class ViewerActivity2 extends AppCompatActivity {
             }
         });
 
+
+
         pageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -305,17 +323,6 @@ public class ViewerActivity2 extends AppCompatActivity {
                 }
             }
         });
-
-        View.OnLongClickListener tbToggle = new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                //touched = true;
-                toggleToolbar();
-                return true;
-            }
-        };
-        nextPageBtn.setOnLongClickListener(tbToggle);
-        prevPageBtn.setOnLongClickListener(tbToggle);
 
         commentBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -789,6 +796,7 @@ public class ViewerActivity2 extends AppCompatActivity {
     }
 
     void lockUi(Boolean lock){
+        this.uilocked = lock;
         toolbar_toggleBtn.setEnabled(!lock);
         commentBtn.setEnabled(!lock);
         next.setEnabled(!lock);

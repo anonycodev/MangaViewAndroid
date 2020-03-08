@@ -383,18 +383,7 @@ public class EpisodeActivity extends AppCompatActivity {
     }
 
     public void openViewer(Manga manga, int code){
-        Intent viewer = null;
-        switch (p.getViewerType()){
-            case 0:
-                viewer = new Intent(context, ViewerActivity.class);
-                break;
-            case 2:
-                viewer = new Intent(context, ViewerActivity3.class);
-                break;
-            case 1:
-                viewer = new Intent(context, ViewerActivity2.class);
-                break;
-        }
+        Intent viewer = new Intent(context, ViewerActivity2.class);
         viewer.putExtra("manga", new Gson().toJson(manga));
         viewer.putExtra("title", new Gson().toJson(title));
         viewer.putExtra("recent",true);

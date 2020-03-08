@@ -150,6 +150,7 @@
                 android:text="뷰어 설정"/>
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:visibility="gone"
                 android:id="@+id/setting_viewer"
                 android:layout_width="match_parent"
                 android:layout_height="70dp"
